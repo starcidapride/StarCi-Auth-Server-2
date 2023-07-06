@@ -57,5 +57,9 @@ export class AuthController {
     	return await this.authService.processInit(user)
     }
 
+	@Get('hello')
+    async handleHello(){
+    	return {hello: 'world'}
+    }
 
 }
