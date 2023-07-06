@@ -1,3 +1,4 @@
+import { CreateUserErrors } from '@apptypes/auth.type'
 import { PrismaService } from '@database/prisma.service'
 import { Injectable } from '@nestjs/common'
 import { User } from '@prisma/client'
@@ -43,20 +44,32 @@ export class UserDbService {
 			email: string,
 			password: string,
 			bio?: string,
-			username?: string,
+			username: string,
 			firstName: string,
 			lastName: string,
 			image?: string,
 			verified: boolean
-		}): Promise<User | null> {
+		}): Promise<{ createResult: true , user: User } | { createResult: false , errors: CreateUserErrors }> {
 		try {
-			return await this.prismaService.user.create({
+			const user = await this.prismaService.user.create({
 				data
 			})
+			return { createResult : true, user }
+
 		}
 		catch (ex) {
-			return null
-		}
+			const errors: CreateUserErrors = {}
+
+			if (ex.code === 'P2002') {
+				const uniqueField = ex.meta.target
+				if (uniqueField === 'User_email_key') {
+					errors.emailError = 'Email already exists'
+				} else if (uniqueField === 'User_username_key') {
+					errors.usernameError = 'Username already taken'
+				}
+			  }
+			  return { createResult: false, errors }
+			  }
 	}
 
 	async updateUser(
@@ -84,10 +97,11 @@ export class UserDbService {
 						...(data?.image && { picture: data.image }),
 						...(data?.verified && { verified: data.verified }),
 					}
-				}
+				}	
 			)
 		} catch (ex) {
 			return null
 		}
 	}
+
 }

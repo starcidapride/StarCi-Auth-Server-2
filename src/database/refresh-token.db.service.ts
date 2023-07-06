@@ -26,7 +26,7 @@ export class RefreshTokenDbService {
 
 	}
 
-	async addToken(refreshToken: RefreshToken): Promise<RefreshToken | null> {
+	async addToken(refreshToken: {token: string, email: string}): Promise<RefreshToken | null> {
 
 		try {
 			return await this.prisma.refreshToken.create({ data: refreshToken})

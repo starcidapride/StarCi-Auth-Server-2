@@ -5,10 +5,12 @@ import { User } from '@prisma/client'
 
 import jwtConfig from '@config/jwt.config'
 import { JwtService } from '@nestjs/jwt'
-import { AuthTokenSet, PresentableUser, SignInResponse, SignUpRequest } from '@apptypes/auth.type'
+import { AuthTokenSet, Payload, PresentableUser, SignInResponse, SignUpRequest, VerifyResponse } from '@apptypes/auth.type'
 import { RefreshTokenDbService } from '@database/refresh-token.db.service'
 
 import { MailerService } from '@routes/auth/mailer/mailer.service'
+import {TokenExpiredError} from 'jsonwebtoken'
+
 
 @Injectable()
 export class AuthService {
@@ -57,12 +59,14 @@ export class AuthService {
 		}
 		const presentableUser : PresentableUser = {
 			email: user.email,
-			...(user.username && { username: user.username }),
+			username: user.username,
 			...(user.image && { image: user.image }),
 			...(user.bio && { bio: user.bio }),
 			firstName: user.firstName,
 			lastName: user.lastName
 		}
+
+		await this.refreshTokenDbService.addToken({email: user.email, token: authTokenSet.refreshToken })
 
 		return { authTokenSet, presentableUser }
 	}
@@ -74,48 +78,83 @@ export class AuthService {
 		const user = {
 			email,
 			password: hashedPassword, 
+			username,
 			firstName, 
 			lastName, 
 			verified: false
 		}
 
-		const createResult = await this.userDbService.createUser(user)
-		if (!createResult) {
-			throw new HttpException('This email has been register before.', HttpStatus.NOT_FOUND)
+		const createdUser = await this.userDbService.createUser(user)
+		const createdResult = createdUser.createResult
+
+		if (createdResult === false) {
+			throw new HttpException(createdUser.errors, HttpStatus.CONFLICT)
 		}
 
-		await this.mailerService.sendMail(email, username)
+		await this.mailerService.sendMail(email)
 		return {
 			email: user.email,
+			username: user.username,
 			firstName: user.firstName,
 			lastName: user.lastName
 		}
 	}
 
-	// async processRefresh(refreshToken: string): Promise<AuthTokenSet> {
-	// 	let payload: Payload
-	// 	try{
-	// 	 	payload = await this.jwtService.verifyAsync<Payload>(
-	// 			refreshToken, 
-	// 			{ 
-	// 				secret: jwtConfig().secret 
-	// 			}
-	// 		)
-	// 	} catch (ex){
-	// 		throw new HttpException('The refresh token has either expired or is invalid.', HttpStatus.BAD_REQUEST)
-	// 	}
+	async processRefresh(refreshToken: string): Promise<AuthTokenSet> {
+		let payload: Payload
+		try{
+		 	payload = await this.jwtService.verifyAsync<Payload>(
+				refreshToken, 
+				{ 
+					secret: jwtConfig().secret 
+				}
+			)
+		} catch (ex){
+			throw new HttpException('The refresh token has either expired or is invalid.', HttpStatus.UNAUTHORIZED)
+		}
 
-	// 	const email = payload.email
+		const email = payload.email
 
-	// 	const tokenSet = await this.generateAuthTokenSet(email)
-	// 	await this.refreshTokenDbService.addToken({
-	// 		token: tokenSet.refreshToken,
-	// 		email
-	// 	}
-	// 	)
-	// 	return tokenSet
-	// }
+		const tokenSet = await this.generateAuthTokenSet(email)
+		await this.refreshTokenDbService.addToken({
+			token: tokenSet.refreshToken,
+			email
+		}
+		)
+		return tokenSet
+	}
 
+	async processVerify(email: string, token: string): Promise<VerifyResponse> {
+		try {
+			const decoded = this.jwtService.verify<Payload>(token, { secret: jwtConfig().secret })
 
+			const verified = (await this.userDbService.getUser({email : decoded.email})).verified
+
+			if (verified) {
+				return 'already confirmed'
+			} else {
+				await this.userDbService.updateUser(email, { verified: true })
+				return 'success'
+			}
+
+		} catch (ex) {
+			if (ex instanceof TokenExpiredError) {
+				return 'time out'
+			} else {
+				return 'not found'
+			}
+		}
+	}
+
+	async processInit(user: User): Promise<PresentableUser> {
+		return {
+			email: user.email,
+			username: user.username,
+			...(user.image && { image: user.image }),
+			...(user.bio && { bio: user.bio }),
+			firstName: user.firstName,
+			lastName: user.lastName
+		}
+	}
 }
 

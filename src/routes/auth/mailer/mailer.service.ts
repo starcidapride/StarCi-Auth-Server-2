@@ -27,7 +27,7 @@ export class MailerService {
 		} 
 	})
 
-	private mailOptions = (email: string, username: string) => {
+	private mailOptions = (email: string) => {
 		const serverURL = serverConfig().serverUrl
 		const token = this.generateVerifyToken(email)
 		return {
@@ -35,7 +35,7 @@ export class MailerService {
 			to: email,
 			subject: 'REGISTRATION CONFIRMATION - STARCI',
 			html: `
-			<p>Dear ${username},</p>
+			<p>Dear ${email},</p>
 			<p>To complete your registration, please click on the confirmation link below:</p>
 			<a href="${serverURL}auth/verify-email?email=${email}&token=${token}">Here</a>
 			<p>If you did not sign up for StarCi, you can ignore this email.</p>
@@ -45,7 +45,7 @@ export class MailerService {
 		}
 	}
 
-	async sendMail(email: string, username: string){
-		this.transporter.sendMail(this.mailOptions(email, username))
+	async sendMail(email: string){
+		this.transporter.sendMail(this.mailOptions(email))
 	}
 }

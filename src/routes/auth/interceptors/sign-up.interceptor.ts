@@ -6,7 +6,7 @@ import { SignUpErrors} from '@apptypes/auth.type'
 @Injectable()
 export class SignUpInterceptor implements NestInterceptor {
 	intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-		console.log('Before request processing')
+
 		const data = context.switchToHttp().getRequest().body
 		const { email, password, confirm, username, firstName, lastName } = data
 		const errors: SignUpErrors = {}
