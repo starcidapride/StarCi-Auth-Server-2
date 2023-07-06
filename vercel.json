@@ -1,0 +1,32 @@
+{
+    "version": 2,
+    "env": {
+      "DATABASE_URL": "mongodb+srv://starci:Cuong123_A@starci.cxxtr5g.mongodb.net/StarCi?retryWrites=true&w=majority",
+      "SALT": "starci",
+      "SECRET": "starci",
+      "ACCESS_TOKEN_EXPIRY_TIME": "15m",
+      "REFRESH_TOKEN_EXPIRY_TIME": "30d",
+      "VERIFY_TOKEN_EXPIRY_TIME": "5m",
+      "PORT": 3000,
+      "MAILER_USER": "starcidapride@gmail.com",
+      "MAILER_PASS": "liazpqxtbhwzviga"
+    },
+    "builds": [
+      {
+        "src": "src/main.ts",
+        "use": "@vercel/node"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(.*)",
+        "dest": "src/main.ts",
+        "methods": [
+          "GET",
+          "POST",
+          "PUT",
+          "DELETE"
+        ]
+      }
+    ]
+  }
