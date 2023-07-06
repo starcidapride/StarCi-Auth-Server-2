@@ -7,6 +7,8 @@ import { NestExpressApplication } from '@nestjs/platform-express'
 import {json} from 'body-parser'
 
 async function bootstrap() {
+	const port = serverConfig().port || 3000;
+
 	const app = await NestFactory.create<NestExpressApplication>(AppModule)
 	app.enableCors()
 	app.setBaseViewsDir(join(__dirname, '..', 'views'))
@@ -16,7 +18,7 @@ async function bootstrap() {
 
 	const prismaService = app.get(PrismaService)
 	await prismaService.enableShutdownHooks(app)
-	await app.listen(serverConfig().port)
+	await app.listen(port)
 
 }
 
