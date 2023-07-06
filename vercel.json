@@ -7,7 +7,7 @@
       "ACCESS_TOKEN_EXPIRY_TIME": "15m",
       "REFRESH_TOKEN_EXPIRY_TIME": "30d",
       "VERIFY_TOKEN_EXPIRY_TIME": "5m",
-      "PORT": 3000,
+      "PORT": "3000",
       "MAILER_USER": "starcidapride@gmail.com",
       "MAILER_PASS": "liazpqxtbhwzviga"
     },
