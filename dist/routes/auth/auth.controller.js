@@ -49,6 +49,9 @@ let AuthController = exports.AuthController = class AuthController {
     async handleInit(user) {
         return await this.authService.processInit(user);
     }
+    async handleHello() {
+        return { hello: 'world' };
+    }
 };
 __decorate([
     (0, common_1.UseGuards)(local_guard_1.LocalAuthGuard),
@@ -92,6 +95,12 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "handleInit", null);
+__decorate([
+    (0, common_1.Get)('hello'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "handleHello", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('api/auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

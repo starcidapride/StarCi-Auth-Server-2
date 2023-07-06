@@ -10,4 +10,7 @@ export declare class AuthController {
     handleVerify(email: string, token: string, res: Response): Promise<void>;
     handleRefresh(authHeader: string): Promise<AuthTokenSet>;
     handleInit(user: User): Promise<PresentableUser>;
+    handleHello(): Promise<{
+        hello: string;
+    }>;
 }
